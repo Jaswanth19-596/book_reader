@@ -1,0 +1,59 @@
+<!doctype html><html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Folio — Read & understand</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header>
+<div class="brand"><span class="mark">f</span><b>folio</b><small>A little clarity on every page.</small>
+</div>
+<div class="actions"><button id="settings">Connection</button><button class="primary" id="open">＋ Open PDF</button><input hidden type="file" id="file" accept="application/pdf,.pdf">
+</div>
+</header>
+<main class="workspace">
+<section class="reader" aria-label="PDF reader">
+<div class="toolbar"><span class="filename" id="filename">The art of paying attention</span>
+<div class="controls"><button id="prev" aria-label="Previous page" disabled>‹</button><input id="pageNumber" aria-label="Page number" value="1" inputmode="numeric"><span id="pages">/ 1</span><button id="next" aria-label="Next page" disabled>›</button><button id="minus" aria-label="Zoom out">−</button><span id="zoom">100%</span><button id="plus" aria-label="Zoom in">＋</button>
+</div>
+</div>
+<div class="reader-scroll" id="drop">
+<div class="sheet sample" id="sheet">
+<div class="chapter">Folio reading sample</div>
+<h1>The art of<br>paying attention</h1>
+<p>Reading is an invitation to slow down. In a world that rewards speed, a book asks us to be still long enough to notice something new.</p>
+<p>There is a certain <mark>serendipity</mark> in turning a page and finding exactly the thought you did not know you needed. An unfamiliar word, a surprising idea, a sentence that stays with you.</p>
+<p>Curiosity makes these small discoveries possible. Rather than rushing past what we do not understand, we can pause, look a little closer, and let the meaning unfold.</p>
+<p>A good reading habit is not measured only in pages. It lives in the connections we make between the words on the page and the world beyond it.</p>
+<footer>Try it: select “serendipity” to explore its meaning. Then open your own PDF.</footer>
+</div>
+</div>
+<div class="hint" id="hint">Select a word, sentence, or paragraph to understand it in context.</div>
+</section>
+<aside aria-label="Meanings">
+<div class="tabs"><button id="meaningTab" class="active">Meaning</button><button id="savedTab">Saved selections <span id="count">0</span></button>
+</div>
+<form id="lookupBar"><input id="manualWord" aria-label="Text to explain" placeholder="Type a word, sentence, or paragraph…" maxlength="12000"><button aria-label="Look up word">↗</button>
+</form>
+<div id="meaning" aria-live="polite">
+</div>
+<div id="saved" hidden>
+</div>
+</aside>
+</main>
+<dialog id="config">
+<h2>Connect your reading companion</h2>
+<p>Use your OpenCode Go API key for contextual meanings. Remember your connection on this device so you can return without entering the key again. Explanation requests pass through this site’s server to OpenCode.</p>
+<label for="key">API key</label><input id="key" type="password" autocomplete="off" placeholder="Paste your OpenCode Go key">
+<label class="remember"><input id="remember" type="checkbox" checked> Remember on this device</label>
+<p id="connectionStatus" role="status">
+</p>
+<p>Remembering stores the key unencrypted in this browser’s local storage, accessible to anyone using this browser profile. Use Forget connection to remove it.</p>
+<label for="model">Model</label><select id="model"><option value="glm-5.3-flash">GLM-5.3-Flash</option><option value="kimi-k3">Kimi K3</option><option value="deepseek-v4.1-flash">DeepSeek V4.1 Flash</option></select>
+<p>Only your selected text and a short surrounding excerpt are sent. Your PDF is not uploaded. Saved selections are stored in this browser.</p>
+<div class="dialog-actions"><button id="forget">Forget connection</button><button id="closeConfig">Cancel</button><button id="connect" class="primary">Save connection</button>
+</div>
+</dialog>
+<div id="toast" role="status">
+</div>
+<script type="module" src="/app.js">
+</script>
+</body></html>

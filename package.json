@@ -1,0 +1,13 @@
+{
+  "name": "folio-book-reader",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "check": "node --check public/app.js && node --check public/connection.js && node --check netlify/functions/meaning.mjs && node --check scripts/dev.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "npm run check"
+  }
+}
