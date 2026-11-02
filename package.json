@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "check": "node --check public/app.js && node --check public/connection.js && node --check netlify/functions/meaning.mjs && node --check scripts/dev.mjs",
+    "dev": "node scripts/configure.mjs && node scripts/dev.mjs",
+    "check": "node --check public/app.js && node --check public/connection.js && node --check netlify/functions/meaning.mjs && node --check scripts/dev.mjs && node --check public/storage.js && node --check public/cloud.js && node --check scripts/configure.mjs",
     "test": "node --test tests/*.test.mjs",
-    "build": "npm run check"
+    "build": "node scripts/configure.mjs && npm run check"
   }
 }

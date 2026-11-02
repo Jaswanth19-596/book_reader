@@ -6,7 +6,7 @@
 <header>
 <div class="brand"><span class="mark">f</span><b>folio</b><small>A little clarity on every page.</small>
 </div>
-<div class="actions"><button id="settings">Connection</button><button class="primary" id="open">＋ Open PDF</button><input hidden type="file" id="file" accept="application/pdf,.pdf">
+<div class="actions"><button id="cloud">Cloud storage</button><button id="settings">Connection</button><button class="primary" id="open">＋ Open PDF</button><input hidden type="file" id="file" accept="application/pdf,.pdf">
 </div>
 </header>
 <main class="workspace">
@@ -35,6 +35,7 @@
 </form>
 <div id="meaning" aria-live="polite">
 </div>
+<p id="storageStatus" class="note" role="status"></p>
 <div id="saved" hidden>
 </div>
 </aside>
@@ -48,9 +49,27 @@
 </p>
 <p>Remembering stores the key unencrypted in this browser’s local storage, accessible to anyone using this browser profile. Use Forget connection to remove it.</p>
 <label for="model">Model</label><select id="model"><option value="glm-5.3-flash">GLM-5.3-Flash</option><option value="kimi-k3">Kimi K3</option><option value="deepseek-v4.1-flash">DeepSeek V4.1 Flash</option></select>
-<p>Only your selected text and a short surrounding excerpt are sent. Your PDF is not uploaded. Saved selections are stored in this browser.</p>
+<p>Only your selected text and a short surrounding excerpt are sent. Your PDF is not uploaded. Saved selections are stored in Supabase when you sign in through Cloud storage.</p>
 <div class="dialog-actions"><button id="forget">Forget connection</button><button id="closeConfig">Cancel</button><button id="connect" class="primary">Save connection</button>
 </div>
+</dialog>
+<dialog id="cloudDialog">
+<h2>Your reading, safely saved</h2>
+<p id="cloudStatus" role="status"></p>
+<p id="cloudEmail"></p>
+<form id="signInForm">
+<label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+<div class="dialog-actions"><button id="signIn" class="primary" type="submit">Email me a sign-in link</button><button id="signOut" type="button" hidden>Sign out</button></div>
+</form>
+<p>Sign in with the same email on each device. Clearing browser data signs you out but does not remove your cloud selections. An internet connection is required to save.</p>
+<div class="dialog-actions"><button id="refreshCloud">Refresh selections</button><button id="migrateBrowser">Import browser data</button></div>
+<h3>Keep a backup</h3>
+<p>Download a separate copy regularly. Backups include saved and recently removed selections, but no API keys or PDFs. Import adds missing selections without replacing existing ones.</p>
+<div class="dialog-actions"><button id="exportBackup">Download cloud backup</button><button id="exportBrowser">Download old browser data</button><button id="importBackup">Import backup</button></div>
+<input type="file" id="backupFile" accept="application/json,.json" hidden>
+<details><summary>Recently removed</summary><div id="removedList"></div></details>
+<p>PDF files and reading position are not yet saved. Your OpenCode API key remains a separate browser setting.</p>
+<div class="dialog-actions"><button id="closeCloud">Close</button></div>
 </dialog>
 <div id="toast" role="status">
 </div>
