@@ -21,32 +21,23 @@ Open http://localhost:4173. There are no dependencies to install. The local serv
 
 No API key belongs in the repository or in the Netlify configuration. Every visitor supplies their own key. The server function forwards it to OpenCode for explanation requests and does not save it. Existing OpenCode model names and provider behavior have been preserved from the original reader.
 
-## Supabase setup
+## Supabase setup — shared library, no sign-in
 
-Saved selections now belong to a signed-in Supabase account. Cloud setup is required before saving new selections; the app never silently falls back to localStorage.
+The browser connects directly to Supabase with the public project URL and publishable key. Every page load fetches the shared saved selections. No email, password, auth session, or redirect configuration is needed.
 
-1. Create a Supabase project named `folio-book-reader`. Choose a nearby region and keep its database password private.
-2. Open **SQL Editor → New query**, paste the contents of `supabase/schema.sql`, and run it. This creates `folio_selections` and per-account access policies. No manual columns are needed. The script is safe to run again.
-3. Copy the **Project URL** and **Publishable key** from the project's Connect dialog / API settings. Legacy `anon` keys are also supported. Never use a secret or `service_role` key.
-4. Set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in your Netlify build environment. For local use, set these environment variables before `npm run dev`, or enter the public values in `public/supabase-config.js`. The build/dev configuration script writes these public credentials into the browser configuration. Redeploy or restart after changing them. No `.env` loader is installed.
-5. In Supabase **Authentication → URL Configuration**, set **Site URL** to your deployed reader URL and add your exact deployed URL and `http://localhost:4173/` to **Redirect URLs**. Enable the Email provider. For emails beyond Supabase's test-mail restrictions, configure your own SMTP provider in Authentication settings.
-6. Open **Cloud storage**, enter your email and request a sign-in link. Open the emailed link, then use the same email on every device.
-7. Choose **Import browser data** to copy surviving old selections into the signed-in account. Repeat from each original browser/address that holds data. Imports keep the original browser copy and never overwrite existing cloud content. If an import is interrupted, retry it; duplicate selections are ignored.
+1. In the Supabase SQL Editor, run `supabase/shared-selections.sql`. This creates the shared library and copies existing account selections into it without deleting the originals. Running it again does not overwrite shared selections.
+2. Public project credentials are in `public/supabase-config.js`. Deployments can override them with `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or the `NEXT_PUBLIC_` versions). Never supply a secret/service-role key to the browser configuration.
+3. Open the reader. Selections load automatically. **Cloud storage → Refresh selections** fetches changes from other browsers.
 
-### Storage and recovery
+Anyone with access to this public app can read, add, archive, and restore shared selections. Permanent deletion and editing existing selection content are not granted to the browser. Removed selections remain available in **Recently removed**.
 
-- Saved words, sentences, paragraphs and their explanations live in Supabase. Clearing browser storage may sign you out, but signing in again reloads your selections.
-- Saves require internet access and are only confirmed after the server responds. If an action fails, keep the selection open and retry. There is no offline save queue.
-- Removing a selection archives it. Open **Cloud storage → Recently removed** to restore it. The app's database permissions prevent permanent deletes and content overwrites.
-- Use **Download cloud backup** regularly and keep the JSON file on another drive or cloud storage. It includes active and removed selections. **Import backup** adds missing items; existing removed items remain in Recently removed until restored. This is a manual independent backup, not an automatic off-site backup service.
-- **Download old browser data** works even before Supabase is configured. Already-erased browser data cannot be recreated by this migration; check the original address/browser profile or an existing backup.
-- Supabase authentication sessions and the OpenCode API key still use browser storage. The OpenCode key stays out of the cloud selections database and backup files. It is unencrypted in the browser when Remember is enabled. Forget connection removes it.
-- PDFs and reading position are not saved yet. Open your PDF each time. PDF rendering is local; explanation requests send only the selection and short surrounding excerpt. PDF.js and the Supabase client load from CDNs and require internet access.
-- Account deletion in Supabase deletes that account's selections. Cloud storage does not replace independent backups.
+Use **Import browser data** to copy any surviving localStorage selections. The original browser copy is retained. **Download cloud backup** exports active and removed selections; **Import backup** adds missing items without replacing existing ones. Keep an independent backup regularly.
 
-### Verify database access before deployment
+Saves require internet access and are confirmed only after the server responds. There is no offline save queue. Already-erased browser data cannot be recreated without a backup.
 
-With two test accounts, save a selection as account A. Account B must not see or update A's row, including when directly requesting its ID; signed-out requests must not read or write rows. Attempted permanent deletion and payload updates must be denied. Reopen the app after clearing its browser storage, sign back in as A, and verify the selection returns. Live authentication and access-policy checks require a configured Supabase project; local unit tests mock database responses.
+The OpenCode API key remains a separate browser setting and is not included in Supabase or backup exports. PDFs and reading position are not saved yet. PDF.js and the Supabase client load from CDNs.
+
+`supabase/schema.sql` is the previous account-based schema, retained for reference. Use `supabase/shared-selections.sql` for the current app.
 
 This project is ready for your own deployment; it does not change the existing ChatGPT-hosted site or its access settings. Netlify access settings are separate; the source code does not include ChatGPT login.
 

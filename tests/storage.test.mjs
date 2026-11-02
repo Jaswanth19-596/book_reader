@@ -26,14 +26,15 @@ test('legacy import does not alter or remove original browser storage', () => {
   assert.throws(() => readLegacy({ getItem() { return 'corrupted'; } }));
 });
 
-test('saves use account ownership and stable IDs; import never overwrites cloud rows', async () => {
+test('saves use shared storage and stable IDs; import never overwrites cloud rows', async () => {
   const writes = [];
-  const client = { from(name) { assert.equal(name, 'folio_selections'); return { async upsert(rows, options) { writes.push({ rows, options }); return { error: null }; } }; } };
+  const client = { from(name) { assert.equal(name, 'folio_shared_selections'); return { async upsert(rows, options) { writes.push({ rows, options }); return { error: null }; } }; } };
   const store = new CloudSelections(client, 'user-one');
   await store.save([item]); await store.save([{ ...item, meaning: 'changed' }]);
   assert.equal(writes[0].rows[0].id, writes[1].rows[0].id);
   assert.match(writes[0].rows[0].id, /^[0-9a-f]{64}$/);
-  assert.equal(writes[0].rows[0].user_id, 'user-one');
+  assert.equal(writes[0].rows[0].user_id, undefined);
+  assert.equal(writes[0].options.onConflict, 'id');
   assert.equal(writes[0].options.ignoreDuplicates, true);
 });
 
@@ -42,10 +43,10 @@ test('save failures propagate instead of reporting success', async () => {
   await assert.rejects(store.save([item]), /Offline/);
 });
 
-test('pagination retrieves more than the API row limit and scopes every request', async () => {
+test('pagination retrieves shared selections beyond the API row limit', async () => {
   let calls = 0;
   const query = {
-    select() { return this; }, eq(key, value) { assert.equal(key, 'user_id'); assert.equal(value, 'owner'); return this; },
+    select() { return this; },
     order(key) { assert.equal(key, 'id'); return this; },
     async range(start, end) { calls++; assert.equal(end - start, 499); return { data: Array.from({ length: start === 0 ? 500 : 3 }, (_, i) => ({ id: start + i })), error: null }; }
   };
@@ -65,6 +66,6 @@ test('archive and restore only update deletion timestamp and require an acknowle
   await store.archive('id'); await store.archive('id', false);
   assert.deepEqual(Object.keys(updates[0]), ['deleted_at']);
   assert.equal(updates[1].deleted_at, null);
-  assert.deepEqual(filters.slice(0, 2), [['user_id', 'owner'], ['id', 'id']]);
+  assert.deepEqual(filters, [['id', 'id'], ['id', 'id']]);
   count = 0; await assert.rejects(store.archive('id'), /not updated/);
 });

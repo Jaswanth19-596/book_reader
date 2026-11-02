@@ -6,7 +6,7 @@ export function setupCloud({ onChange, notify }) {
   let client, store, rows = [], generation = 0, ready = false, loading;
   const status = text => { $('storageStatus').textContent = text; $('cloudStatus').textContent = text; };
   const publish = () => onChange(rows.filter(row => !row.deleted_at).map(row => ({ ...row.payload, cloudId: row.id })));
-  const failure = error => { status('Cloud action failed: ' + (error.message || 'Please try again.')); notify('Not confirmed saved. Check Cloud storage and retry.'); };
+  const failure = error => { const message = ['PGRST205', '42P01', '42501'].includes(error.code) ? 'Run supabase/shared-selections.sql in your Supabase SQL Editor, then refresh selections.' : (error.message || 'Please try again.'); status('Cloud action failed: ' + message); notify('Cloud action failed. Check Cloud storage for details.'); };
   function recovery() {
     $('removedList').replaceChildren();
     for (const row of rows.filter(row => row.deleted_at)) {
@@ -24,7 +24,7 @@ export function setupCloud({ onChange, notify }) {
     finally { button.disabled = false; }
   }
   function requireStore() {
-    if (!store || !ready) throw Error('Open Cloud storage and sign in; refresh if loading failed.');
+    if (!store || !ready) throw Error('Selections are still loading. Open Cloud storage and refresh if loading failed.');
     return store;
   }
   async function refresh() {
@@ -32,53 +32,28 @@ export function setupCloud({ onChange, notify }) {
     const version = ++generation, active = store;
     ready = false; status('Loading saved selections…');
     const next = await active.list();
-    // An old account's response must never appear after sign-out/account changes.
+    // Ignore an older response if another refresh has started.
     if (version !== generation || store !== active) return;
     next.forEach(row => validateSelections([row.payload]));
     rows = next; ready = true; publish(); recovery();
-    status('Saved selections are stored in your Supabase account.');
+    status('Selections loaded from Supabase.');
   }
   async function init() {
     if (client) return client;
     if (!supabaseConfig.url || !supabaseConfig.publishableKey) throw Error('Supabase setup is not complete yet. Add the project URL and publishable key, then reload.');
     if (!loading) loading = (async () => {
       const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.49.8');
-      client = createClient(supabaseConfig.url, supabaseConfig.publishableKey);
-      client.auth.onAuthStateChange((event, session) => {
-        // Defer database requests until the auth callback has released its lock.
-        setTimeout(() => {
-          const id = session?.user.id;
-          $('signOut').hidden = !id;
-          $('cloudEmail').textContent = session?.user.email || '';
-          if (store && store.userId === id) return;
-          generation++; store = id ? new CloudSelections(client, id) : null;
-          rows = []; ready = false; publish(); recovery();
-          if (store) refresh().catch(failure);
-          else status('Sign in to save and restore selections from Supabase.');
-        }, 0);
+      client = createClient(supabaseConfig.url, supabaseConfig.publishableKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
       });
+      store = new CloudSelections(client);
       return client;
     })().catch(error => { loading = null; throw error; });
     return loading;
   }
   $('cloud').onclick = () => { $('cloudDialog').showModal(); init().catch(failure); };
   $('closeCloud').onclick = () => $('cloudDialog').close();
-  $('signInForm').onsubmit = event => {
-    event.preventDefault();
-    run($('signIn'), async () => {
-      const api = await init();
-      const { error } = await api.auth.signInWithOtp({ email: $('email').value.trim(), options: { emailRedirectTo: location.origin + location.pathname } });
-      if (error) throw error;
-      status('Check your email and open the sign-in link to access your saved selections.');
-    });
-  };
-  $('signOut').onclick = () => run($('signOut'), async () => {
-    const { error } = await client.auth.signOut(); if (error) throw error;
-    generation++; store = null; ready = false; rows = []; publish(); recovery();
-    $('cloudEmail').textContent = ''; $('signOut').hidden = true;
-    status('Signed out. Your selections remain in Supabase.');
-  });
-  $('refreshCloud').onclick = () => run($('refreshCloud'), async () => { if (!store) throw Error('Sign in first.'); await refresh(); });
+  $('refreshCloud').onclick = () => run($('refreshCloud'), async () => { await init(); await refresh(); });
   $('migrateBrowser').onclick = () => run($('migrateBrowser'), async () => {
     const active = requireStore();
     const legacy = readLegacy(localStorage);
@@ -107,7 +82,7 @@ export function setupCloud({ onChange, notify }) {
     status('Backup imported. Existing selections were kept; use Recently removed to restore archived items.');
   });
   status(supabaseConfig.url ? 'Connecting to Supabase…' : 'Cloud storage needs setup. Open Cloud storage to get started.');
-  if (supabaseConfig.url) init().catch(failure);
+  if (supabaseConfig.url) init().then(refresh).catch(failure);
   return {
     async save(item) {
       const active = requireStore();

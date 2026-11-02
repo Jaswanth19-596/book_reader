@@ -49,19 +49,14 @@
 </p>
 <p>Remembering stores the key unencrypted in this browser’s local storage, accessible to anyone using this browser profile. Use Forget connection to remove it.</p>
 <label for="model">Model</label><select id="model"><option value="glm-5.3-flash">GLM-5.3-Flash</option><option value="kimi-k3">Kimi K3</option><option value="deepseek-v4.1-flash">DeepSeek V4.1 Flash</option></select>
-<p>Only your selected text and a short surrounding excerpt are sent. Your PDF is not uploaded. Saved selections are stored in Supabase when you sign in through Cloud storage.</p>
+<p>Only your selected text and a short surrounding excerpt are sent. Your PDF is not uploaded. Saved selections load directly from Supabase.</p>
 <div class="dialog-actions"><button id="forget">Forget connection</button><button id="closeConfig">Cancel</button><button id="connect" class="primary">Save connection</button>
 </div>
 </dialog>
 <dialog id="cloudDialog">
 <h2>Your reading, safely saved</h2>
 <p id="cloudStatus" role="status"></p>
-<p id="cloudEmail"></p>
-<form id="signInForm">
-<label for="email">Email address</label><input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
-<div class="dialog-actions"><button id="signIn" class="primary" type="submit">Email me a sign-in link</button><button id="signOut" type="button" hidden>Sign out</button></div>
-</form>
-<p>Sign in with the same email on each device. Clearing browser data signs you out but does not remove your cloud selections. An internet connection is required to save.</p>
+<p>Your shared selections load automatically whenever you open the reader. No sign-in is needed. An internet connection is required.</p>
 <div class="dialog-actions"><button id="refreshCloud">Refresh selections</button><button id="migrateBrowser">Import browser data</button></div>
 <h3>Keep a backup</h3>
 <p>Download a separate copy regularly. Backups include saved and recently removed selections, but no API keys or PDFs. Import adds missing selections without replacing existing ones.</p>

@@ -29,11 +29,11 @@ export function parseBackup(text) {
 }
 
 export class CloudSelections {
-  constructor(client, userId) { this.client = client; this.userId = userId; }
+  constructor(client) { this.client = client; }
   async list() {
     const rows = [];
     for (let offset = 0; ; offset += 500) {
-      const { data, error } = await this.client.from('folio_selections').select('id,payload,deleted_at').eq('user_id', this.userId).order('id').range(offset, offset + 499);
+      const { data, error } = await this.client.from('folio_shared_selections').select('id,payload,deleted_at').order('id').range(offset, offset + 499);
       if (error) throw error;
       rows.push(...data);
       if (data.length < 500) return rows;
@@ -45,17 +45,17 @@ export class CloudSelections {
       const bytes = new TextEncoder().encode(payload.word);
       const digest = await crypto.subtle.digest('SHA-256', bytes);
       const id = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
-      return { user_id: this.userId, id, payload };
+      return { id, payload };
     }));
     // Ignore conflicts: migration/import must never overwrite a newer cloud copy
     // or resurrect a selection removed on another device.
     for (let i = 0; i < rows.length; i += 100) {
-      const { error } = await this.client.from('folio_selections').upsert(rows.slice(i, i + 100), { onConflict: 'user_id,id', ignoreDuplicates: true });
+      const { error } = await this.client.from('folio_shared_selections').upsert(rows.slice(i, i + 100), { onConflict: 'id', ignoreDuplicates: true });
       if (error) throw error;
     }
   }
   async archive(id, deleted = true) {
-    const { data, error } = await this.client.from('folio_selections').update({ deleted_at: deleted ? new Date().toISOString() : null }).eq('user_id', this.userId).eq('id', id).select('id');
+    const { data, error } = await this.client.from('folio_shared_selections').update({ deleted_at: deleted ? new Date().toISOString() : null }).eq('id', id).select('id');
     if (error) throw error;
     if (data.length !== 1) throw Error('Selection was not updated. Refresh and try again.');
   }
